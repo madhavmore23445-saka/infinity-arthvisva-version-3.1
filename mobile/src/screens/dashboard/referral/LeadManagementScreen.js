@@ -201,8 +201,8 @@ export default function LeadManagementScreen({ navigation }) {
                 }
             >
                 <View style={styles.mainContent}>
-
-                    {/* <View style={styles.pageHeader}>
+{/* 
+                    <View style={styles.pageHeader}>
                         <Text style={styles.title}>Lead Management</Text>
                         <Text style={styles.subtitle}>
                             Efficiently manage your sales pipeline from initial contact to conversion.

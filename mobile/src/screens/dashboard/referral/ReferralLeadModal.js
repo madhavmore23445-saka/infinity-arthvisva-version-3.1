@@ -38,7 +38,7 @@ const SelectInput = ({ label, value, options, onSelect, error, placeholder = "Se
             </TouchableOpacity>
             {error && <Text style={styles.errorText}>{error}</Text>}
 
-            <Modal visible={visible} transparent animationType="none">
+            <Modal visible={visible} transparent animationType="slide">
                 <TouchableOpacity style={styles.modalOverlay} onPress={() => setVisible(false)}>
                     <View style={styles.pickerContainer}>
                         <ScrollView>
@@ -165,7 +165,7 @@ export default function ReferralLeadModal({ visible, onClose, onSuccess }) {
     };
 
     return (
-        <Modal visible={visible} animationType="none" transparent>
+        <Modal visible={visible} animationType="slide" transparent>
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={styles.overlay}
