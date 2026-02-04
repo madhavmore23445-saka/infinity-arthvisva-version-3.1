@@ -21,6 +21,8 @@ const SignupScreen = ({ navigation }) => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [mobile, setMobile] = useState('');
+    const [state, setState] = useState('');
+    const [city, setCity] = useState('');
     const [password, setPassword] = useState('');
     const [rm_referral, setRm_referral] = useState('');
     const [confirmpass, setConfirmpass] = useState('');
@@ -73,6 +75,8 @@ const SignupScreen = ({ navigation }) => {
         setName('');
         setEmail('');
         setMobile('');
+        setCity('');
+        setState('');
         setPassword('');
         setConfirmpass('');
         setRm_referral('');
@@ -151,7 +155,7 @@ const SignupScreen = ({ navigation }) => {
 
             try {
                 // STEP 1: Initial Registration
-                const result = await signup(name, email, mobile, password, rm_referral, confirmpass);
+                const result = await signup(name, email, mobile, password, rm_referral,state , city, confirmpass);
 
                 if (!result.success) {
                     setError(result.message);
@@ -163,6 +167,8 @@ const SignupScreen = ({ navigation }) => {
                     name,
                     email,
                     mobile,
+                    state,
+                    city,
                     password,
                     confirm_password: confirmpass,
                     rm_referral: rm_referral || ""
@@ -322,6 +328,41 @@ const SignupScreen = ({ navigation }) => {
                         value={rm_referral}
                         onChangeText={setRm_referral}
                         autoCapitalize="characters"
+                        placeholderTextColor={theme.colors.textSecondary}
+                    />
+                </View>
+            </View>
+
+
+            {/* state */}
+
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>State</Text>
+                <View style={styles.inputWrapper}>
+                    <Ionicons name="gift-outline" size={20} color={theme.colors.textSecondary} style={styles.inputIcon} />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Enter state"
+                        value={state}
+                        onChangeText={setState}
+                        // autoCapitalize="characters"
+                        placeholderTextColor={theme.colors.textSecondary}
+                    />
+                </View>
+            </View>
+
+            {/* city */}
+
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>city</Text>
+                <View style={styles.inputWrapper}>
+                    <Ionicons name="gift-outline" size={20} color={theme.colors.textSecondary} style={styles.inputIcon} />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Enter referral code if any"
+                        value={city}
+                        onChangeText={setCity}
+                        // autoCapitalize="characters"
                         placeholderTextColor={theme.colors.textSecondary}
                     />
                 </View>

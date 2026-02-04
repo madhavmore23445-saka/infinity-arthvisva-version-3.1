@@ -10,29 +10,54 @@ import {
     SafeAreaView,
     ActivityIndicator,
     Modal,
-    Platform
+    Platform  
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
-import { DashboardService } from '../../../../services/dashboardService';
-import theme from '../../../../constants/theme';
+// import { DashboardService } from '../../../../services/dashboardService';
+// import theme from '../../../../constants/theme';
 import { useNavigation } from '@react-navigation/native';
-import DatePickerInput from '../../../../components/common/DatePickerInput';
+// import DatePickerInput from '../../../../components/common/DatePickerInput';
+
+import theme from '../../../../../constants/theme';
+import { DashboardService } from '../../../../../services/dashboardService';
+import DatePickerInput from '../../../../../components/common/DatePickerInput';
+
 
 const MAX_FILE_SIZE_BYTES = 200 * 1024; // 200KB
 
 const DOC_REGISTRY = {
     "Aadhar Card": { key: "AADHAAR", label: "Aadhar Card", multiple: false },
     "PAN Card": { key: "PAN", label: "PAN Card", multiple: false },
+    "3 Months Salary Slip": { key: "SALARY_SLIP", label: "3 Months Salary Slip", multiple: true },
+    "2 Years Form 16": { key: "FORM16", label: "2 Years Form 16", multiple: true },
+    "6 Months Banking Statement": { key: "BANK_STATEMENT", label: "6 Months Banking Statement", multiple: true },
     "Address Proof": { key: "ADDRESS_PROOF", label: "Address Proof", multiple: false },
-    "1 Year Banking Statement": { key: "BANK_STATEMENT_1YR", label: "1 Year Banking Statement", multiple: true },
-    "Demat Account Statement": { key: "DEMAT_STMT", label: "Demat Account Statement", multiple: true },
-    "Portfolio Reports": { key: "PORTFOLIO", label: "Portfolio Reports", multiple: true },
-    "ITR 3 Years": { key: "ITR_3YRS", label: "ITR 3 Years", multiple: true },
-    "Cancel Cheque": { key: "CANCEL_CHEQUE", label: "Cancel Cheque", multiple: false },
     "Photograph": { key: "PHOTO", label: "Photograph", multiple: false },
+    "Property Cost Sheet / Index II": { key: "COST_SHEET", label: "Property Cost Sheet / Index II", multiple: true },
+    "Own Contribution Proof": { key: "CONTRIBUTION_PROOF", label: "Own Contribution Proof", multiple: true },
+    "Udyam Registration": { key: "UDYAM", label: "Udyam Registration", multiple: false },
+    "Shop Act Licence": { key: "SHOP_ACT", label: "Shop Act Licence", multiple: false },
+    "1 Current Banking Statement": { key: "CURRENT_BANK_STMT", label: "1 Current Banking Statement", multiple: true },
+    "Saving Bank Account": { key: "SAVING_BANK_STMT", label: "Saving Bank Account", multiple: true },
+    "3 Years ITR": { key: "ITR", label: "3 Years ITR", multiple: true },
+    "GST Certificate": { key: "GST_CERTIFICATE", label: "GST Certificate", multiple: false },
+    "Last 12 Months GST Returns": { key: "GST_RETURNS", label: "Last 12 Months GST Returns", multiple: true },
+    "PPO (Pension Payment Order)": { key: "PPO", label: "PPO (Pension Payment Order)", multiple: false },
+    "1 Year Pension Credit Statement": { key: "PENSION_STMT", label: "1 Year Pension Credit Statement", multiple: true },
+    "Rent Agreement": { key: "RENT_AGREEMENT", label: "Rent Agreement", multiple: true },
+    "1 Year Rent Credit Statement": { key: "RENT_STMT", label: "1 Year Rent Credit Statement", multiple: true },
     "Existing Loan Statement": { key: "EXISTING_LOAN", label: "Existing Loan Statement", multiple: true },
 };
+
+const DOC_MAP = {
+    "Salaried Person": ["Aadhar Card", "PAN Card", "3 Months Salary Slip", "2 Years Form 16", "6 Months Banking Statement", "Address Proof", "Photograph", "Property Cost Sheet / Index II", "Own Contribution Proof"],
+    "Self Employed": ["Aadhar Card", "PAN Card", "Udyam Registration", "Shop Act Licence", "1 Current Banking Statement", "Saving Bank Account", "Address Proof", "3 Years ITR", "GST Certificate", "Last 12 Months GST Returns", "Photograph", "Property Cost Sheet / Index II", "Own Contribution Proof"],
+    "Pension": ["Aadhar Card", "PAN Card", "PPO (Pension Payment Order)", "1 Year Pension Credit Statement"],
+    "Rental": ["Rent Agreement", "1 Year Rent Credit Statement"],
+};
+
+const LOAN_TYPES = ["Balance Transfer", "Fresh Mortgage Loan", "Loan Against Property", "Top-up Loan", "Lease Rental Discounting"];
 
 const CustomPicker = ({ label, value, options, onSelect, error, required }) => {
     const [modalVisible, setModalVisible] = useState(false);
@@ -77,13 +102,14 @@ const CustomPicker = ({ label, value, options, onSelect, error, required }) => {
     );
 };
 
-export default function LoanAgainstSecuritiesFormScreen() {
+export default function MortgageLoanFormScreen() {
     const navigation = useNavigation();
     const [step, setStep] = useState(1);
     const [leadId, setLeadId] = useState(null);
     const [form, setForm] = useState({
         clientName: "", phone: "", email: "", dob: "", location: "",
-        loanAmount: "", hasOtherLoan: "", otherLoanAmount: ""
+        loanAmount: "", loanType: "", employmentType: "",
+        hasOtherLoan: "", otherLoanAmount: "", otherIncome: "", otherIncomeAmount: ""
     });
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -91,16 +117,14 @@ export default function LoanAgainstSecuritiesFormScreen() {
     const [statusMsg, setStatusMsg] = useState("");
 
     const requiredDocsList = useMemo(() => {
-        const base = ["Aadhar Card", "PAN Card", "Address Proof", "1 Year Banking Statement", "Demat Account Statement", "Portfolio Reports", "ITR 3 Years", "Cancel Cheque", "Photograph"];
-        if (form.hasOtherLoan === "Yes") base.push("Existing Loan Statement");
-        return base.map(label => DOC_REGISTRY[label]).filter(Boolean);
-    }, [form.hasOtherLoan]);
+        let docs = [...(DOC_MAP[form.employmentType] || [])];
+        if (form.employmentType === "Other") docs.push(...(DOC_MAP[form.otherIncome] || []));
+        if (form.hasOtherLoan === "Yes" && docs.length) docs.push("Existing Loan Statement");
+        return [...new Set(docs)].map(label => DOC_REGISTRY[label]).filter(Boolean);
+    }, [form, form.employmentType]);
 
     const handleInputChange = (field, value) => {
-        setForm(prev => ({
-            ...prev, [field]: value,
-            ...(field === "hasOtherLoan" && value === "No" ? { otherLoanAmount: "" } : {})
-        }));
+        setForm(prev => ({ ...prev, [field]: value }));
         if (errors[field]) setErrors(prev => ({ ...prev, [field]: "" }));
     };
 
@@ -108,15 +132,15 @@ export default function LoanAgainstSecuritiesFormScreen() {
         const errs = {};
         const req = (f, msg) => { if (!form[f]?.trim()) errs[f] = msg; };
 
+        req("loanType", "Select a loan type");
         req("clientName", "Client Name is required");
         req("location", "Location is required");
         req("dob", "Date of Birth is required");
         req("loanAmount", "Loan Amount is required");
+        req("employmentType", "Employment Type is required");
 
-        if (!form.phone || form.phone.length !== 10) errs.phone = "Phone number must be exactly 10 digits";
-        if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Invalid email format";
-        if (!form.hasOtherLoan) errs.hasOtherLoan = "Select an option";
-        if (form.hasOtherLoan === "Yes" && !form.otherLoanAmount) errs.otherLoanAmount = "Existing loan amount is required";
+        if (!form.phone || form.phone.length !== 10) errs.phone = "Invalid phone";
+        if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Invalid email";
 
         setErrors(errs);
         return Object.keys(errs).length === 0;
@@ -129,20 +153,24 @@ export default function LoanAgainstSecuritiesFormScreen() {
         try {
             const payload = {
                 department: "Loan",
-                product_type: "Loan Against Securities",
-                sub_category: "Loan Against Securities",
+                product_type: "Mortgage Loan",
+                sub_category: "Mortgage Loan",
                 client: {
                     name: form.clientName,
                     mobile: form.phone,
-                    email: form.email,
+                    email: form.email
                 },
                 meta: { is_self_login: false },
                 form_data: {
+                    loanType: form.loanType,
                     dob: form.dob,
                     location: form.location,
                     loanAmount: form.loanAmount,
+                    employmentType: form.employmentType,
                     hasOtherLoan: form.hasOtherLoan,
-                    otherLoanAmount: form.otherLoanAmount || "0"
+                    otherLoanAmount: form.otherLoanAmount,
+                    otherIncome: form.otherIncome || "N/A",
+                    otherIncomeAmount: form.otherIncomeAmount || "0"
                 }
             };
 
@@ -151,7 +179,6 @@ export default function LoanAgainstSecuritiesFormScreen() {
             if (!id) throw new Error("Lead ID missing");
             setLeadId(id);
             setStep(2);
-
         } catch (err) {
             console.error(err);
             Alert.alert("Error", "Failed to create application");
@@ -242,20 +269,36 @@ export default function LoanAgainstSecuritiesFormScreen() {
     const renderStep1 = () => (
         <View style={styles.formContainer}>
             <View style={styles.card}>
-                <Text style={styles.cardHeader}>Personal & Application Details</Text>
+                <Text style={styles.cardHeader}>Loan Details</Text>
+                <CustomPicker label="Type of Mortgage Loan" required value={form.loanType} options={LOAN_TYPES} onSelect={v => handleInputChange("loanType", v)} error={errors.loanType} />
+                <InputGroup label="Loan Amount" required keyboardType="numeric" value={form.loanAmount} onChange={v => handleInputChange("loanAmount", v)} error={errors.loanAmount} placeholder="Enter Amount (₹)" />
+            </View>
+
+            <View style={styles.card}>
+                <Text style={styles.cardHeader}>Personal Information</Text>
                 <InputGroup label="Client Name" required value={form.clientName} onChange={v => handleInputChange("clientName", v)} error={errors.clientName} placeholder="Enter full name" />
                 <InputGroup label="Phone Number" required keyboardType="numeric" maxLength={10} value={form.phone} onChange={v => handleInputChange("phone", v)} error={errors.phone} placeholder="10-digit number" />
                 <InputGroup label="Email ID" required keyboardType="email-address" value={form.email} onChange={v => handleInputChange("email", v)} error={errors.email} placeholder="Enter email address" />
                 <DatePickerInput label="Date of Birth" required value={form.dob} onChange={v => handleInputChange("dob", v)} maximumDate={new Date()} error={errors.dob} />
                 <InputGroup label="Location" required value={form.location} onChange={v => handleInputChange("location", v)} error={errors.location} placeholder="Enter city" />
-                <InputGroup label="Loan Amount" required keyboardType="numeric" value={form.loanAmount} onChange={v => handleInputChange("loanAmount", v)} error={errors.loanAmount} placeholder="Enter amount" />
             </View>
 
             <View style={styles.card}>
-                <Text style={styles.cardHeader}>Other Obligations</Text>
+                <Text style={styles.cardHeader}>Employment & Liabilities</Text>
+                <CustomPicker label="Employment Type" required value={form.employmentType} options={["Salaried Person", "Self Employed", "Other"]} onSelect={v => handleInputChange("employmentType", v)} error={errors.employmentType} />
+
+                {form.employmentType === "Other" && (
+                    <>
+                        <CustomPicker label="Other Income Source" required value={form.otherIncome} options={["Pension", "Rental"]} onSelect={v => handleInputChange("otherIncome", v)} error={errors.otherIncome} />
+                        <InputGroup label="Approx Amount" required keyboardType="numeric" value={form.otherIncomeAmount} onChange={v => handleInputChange("otherIncomeAmount", v)} error={errors.otherIncomeAmount} placeholder="Enter amount" />
+                    </>
+                )}
+
+                <View style={styles.divider} />
                 <CustomPicker label="Any Other Loan Obligations?" required value={form.hasOtherLoan} options={["Yes", "No"]} onSelect={v => handleInputChange("hasOtherLoan", v)} error={errors.hasOtherLoan} />
+
                 {form.hasOtherLoan === "Yes" && (
-                    <InputGroup label="Existing Loan Amount" required keyboardType="numeric" value={form.otherLoanAmount} onChange={v => handleInputChange("otherLoanAmount", v)} error={errors.otherLoanAmount} placeholder="Enter amount" />
+                    <InputGroup label="Existing Loan Amount" required keyboardType="numeric" value={form.otherLoanAmount} onChange={v => handleInputChange("otherLoanAmount", v)} error={errors.otherLoanAmount} placeholder="Amount" />
                 )}
             </View>
         </View>
@@ -330,7 +373,7 @@ export default function LoanAgainstSecuritiesFormScreen() {
                     <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
                 </TouchableOpacity>
                 <View>
-                    <Text style={styles.headerTitle}>Loan Against Securities</Text>
+                    <Text style={styles.headerTitle}>Mortgage Loan Application</Text>
                     <Text style={styles.stepIndicator}>Step {step} of 2</Text>
                 </View>
             </View>
@@ -394,6 +437,7 @@ const styles = StyleSheet.create({
     },
     cardHeader: { fontSize: 16, fontWeight: '700', color: '#0F172A', marginBottom: 16 },
     cardSubHeader: { fontSize: 12, color: '#64748B', marginBottom: 16, marginTop: -12 },
+    divider: { height: 1, backgroundColor: '#F1F5F9', marginVertical: 16 },
     inputGroup: { marginBottom: 16 },
     label: { fontSize: 13, fontWeight: '600', marginBottom: 6, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.5 },
     required: { color: theme.colors.error },

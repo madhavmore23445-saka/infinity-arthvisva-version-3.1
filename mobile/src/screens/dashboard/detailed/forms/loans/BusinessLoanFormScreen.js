@@ -10,45 +10,34 @@ import {
     SafeAreaView,
     ActivityIndicator,
     Modal,
-    Platform
+    Platform 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
-import { DashboardService } from '../../../../services/dashboardService';
-import theme from '../../../../constants/theme';
+// import { DashboardService } from '../../../../services/dashboardService';
+// import theme from '../../../../constants/theme';
 import { useNavigation } from '@react-navigation/native';
-import DatePickerInput from '../../../../components/common/DatePickerInput';
+// import DatePickerInput from '../../../../components/common/DatePickerInput';
+
+import theme from '../../../../../constants/theme';
+import { DashboardService } from '../../../../../services/dashboardService';
+import DatePickerInput from '../../../../../components/common/DatePickerInput';
 
 const MAX_FILE_SIZE_BYTES = 200 * 1024; // 200KB
 
 const DOC_REGISTRY = {
     "Aadhar Card": { key: "AADHAAR", label: "Aadhar Card", multiple: false },
     "PAN Card": { key: "PAN", label: "PAN Card", multiple: false },
-    "3 Months Salary Slip": { key: "SALARY_SLIP", label: "3 Months Salary Slip", multiple: true },
-    "2 Years Form 16": { key: "FORM16", label: "2 Years Form 16", multiple: true },
-    "6 Months Banking Statement": { key: "BANK_STATEMENT", label: "6 Months Banking Statement", multiple: true },
-    "Address Proof": { key: "ADDRESS_PROOF", label: "Address Proof", multiple: false },
-    "Photograph": { key: "PHOTO", label: "Photograph", multiple: false },
-    "Draft Agreement": { key: "DRAFT_AGREEMENT", label: "Draft Agreement", multiple: true },
-    "Property Chain of Documents": { key: "CHAIN_DOCS", label: "Property Chain of Documents", multiple: true },
-    "Sanction Plan": { key: "SANCTION_PLAN", label: "Sanction Plan", multiple: false },
-    "Udyam Registration": { key: "UDYAM", label: "Udyam Registration", multiple: false },
+    "Udyam Aadhar Registration": { key: "UDYAM", label: "Udyam Aadhar Registration", multiple: false },
     "Shop Act Licence": { key: "SHOP_ACT", label: "Shop Act Licence", multiple: false },
-    "1 Current Banking Statement": { key: "CURRENT_BANK_STMT", label: "1 Current Banking Statement", multiple: true },
-    "Saving Bank Account": { key: "SAVING_BANK_STMT", label: "Saving Bank Account", multiple: true },
-    "3 Years ITR": { key: "ITR", label: "3 Years ITR", multiple: true },
-    "GST Certificate": { key: "GST_CERTIFICATE", label: "GST Certificate", multiple: false },
-    "Last 12 Months GST Returns": { key: "GST_RETURNS", label: "Last 12 Months GST Returns", multiple: true },
-    "Rent Agreement": { key: "RENT_AGREEMENT", label: "Rent Agreement", multiple: true },
-    "1 Year Rent Credit Statement": { key: "RENT_STMT", label: "1 Year Rent Credit Statement", multiple: true },
+    "1 Year Banking Statement": { key: "BANK_STATEMENT_1YR", label: "1 Year Banking Statement", multiple: true },
+    "Address Proof": { key: "ADDRESS_PROOF", label: "Address Proof", multiple: false },
+    "ITR 3 Years": { key: "ITR_3YRS", label: "ITR 3 Years", multiple: true },
+    "Photograph": { key: "PHOTO", label: "Photograph", multiple: false },
     "Existing Loan Statement": { key: "EXISTING_LOAN", label: "Existing Loan Statement", multiple: true },
 };
 
-const DOC_MAP = {
-    "Salaried Person": ["Aadhar Card", "PAN Card", "3 Months Salary Slip", "2 Years Form 16", "6 Months Banking Statement", "Address Proof", "Photograph", "Draft Agreement", "Property Chain of Documents", "Sanction Plan"],
-    "Self Employed": ["Aadhar Card", "PAN Card", "Udyam Registration", "Shop Act Licence", "1 Current Banking Statement", "Saving Bank Account", "3 Years ITR", "GST Certificate", "Last 12 Months GST Returns", "Photograph", "Draft Agreement", "Property Chain of Documents", "Sanction Plan"],
-    "Rental": ["Rent Agreement", "1 Year Rent Credit Statement", "Draft Agreement", "Property Chain of Documents", "Sanction Plan"],
-};
+const BIZ_TYPES = ["Proprietorship", "Partnership", "Pvt. Ltd."];
 
 const CustomPicker = ({ label, value, options, onSelect, error, required }) => {
     const [modalVisible, setModalVisible] = useState(false);
@@ -93,14 +82,14 @@ const CustomPicker = ({ label, value, options, onSelect, error, required }) => {
     );
 };
 
-export default function NRPLoanFormScreen() {
+export default function BusinessLoanFormScreen() {
     const navigation = useNavigation();
     const [step, setStep] = useState(1);
     const [leadId, setLeadId] = useState(null);
     const [form, setForm] = useState({
-        clientName: "", phone: "", email: "", dob: "", location: "",
-        loanAmount: "", employmentType: "", hasOtherLoan: "", otherLoanAmount: "",
-        otherIncome: "", otherIncomeAmount: ""
+        name: "", phone: "", email: "", dob: "", location: "", loanAmount: "",
+        deduction: "", companyName: "", companyAddress: "", businessStartDate: "",
+        loanType: "", hasOtherLoan: "", otherLoanAmount: ""
     });
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -108,14 +97,16 @@ export default function NRPLoanFormScreen() {
     const [statusMsg, setStatusMsg] = useState("");
 
     const requiredDocsList = useMemo(() => {
-        let docs = [...(DOC_MAP[form.employmentType] || [])];
-        if (form.employmentType === "Other") docs.push(...(DOC_MAP["Rental"] || [])); // Default to rental docs for 'Other' if applicable or handle conditionally
-        if (form.hasOtherLoan === "Yes" && docs.length) docs.push("Existing Loan Statement");
-        return [...new Set(docs)].map(label => DOC_REGISTRY[label]).filter(Boolean);
-    }, [form, form.employmentType]);
+        const base = ["Aadhar Card", "PAN Card", "Udyam Aadhar Registration", "Shop Act Licence", "1 Year Banking Statement", "Address Proof", "ITR 3 Years", "Photograph"];
+        if (form.hasOtherLoan === "Yes") base.push("Existing Loan Statement");
+        return base.map(label => DOC_REGISTRY[label]).filter(Boolean);
+    }, [form.hasOtherLoan]);
 
     const handleInputChange = (field, value) => {
-        setForm(prev => ({ ...prev, [field]: value }));
+        setForm(prev => ({
+            ...prev, [field]: value,
+            ...(field === "hasOtherLoan" && value === "No" ? { otherLoanAmount: "" } : {})
+        }));
         if (errors[field]) setErrors(prev => ({ ...prev, [field]: "" }));
     };
 
@@ -123,14 +114,20 @@ export default function NRPLoanFormScreen() {
         const errs = {};
         const req = (f, msg) => { if (!form[f]?.trim()) errs[f] = msg; };
 
-        req("clientName", "Client Name is required");
+        req("loanType", "Select business type");
+        req("businessStartDate", "Start date is required");
+        req("name", "Client Name is required");
         req("location", "Location is required");
         req("dob", "Date of Birth is required");
         req("loanAmount", "Loan Amount is required");
-        req("employmentType", "Employment Type is required");
+        req("companyName", "Company Name is required");
+        req("deduction", "Deduction details are required");
+        req("companyAddress", "Company Address is required");
 
-        if (!form.phone || form.phone.length !== 10) errs.phone = "Invalid phone";
-        if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Invalid email";
+        if (!form.phone || form.phone.length !== 10) errs.phone = "Phone number must be exactly 10 digits";
+        if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Invalid email format";
+        if (!form.hasOtherLoan) errs.hasOtherLoan = "Select an option";
+        if (form.hasOtherLoan === "Yes" && !form.otherLoanAmount) errs.otherLoanAmount = "Existing loan amount is required";
 
         setErrors(errs);
         return Object.keys(errs).length === 0;
@@ -143,23 +140,25 @@ export default function NRPLoanFormScreen() {
         try {
             const payload = {
                 department: "Loan",
-                product_type: "NRP Loan",
-                sub_category: "NRP Loan",
+                product_type: "Business Loan",
+                sub_category: "Business Loan",
                 client: {
-                    name: form.clientName,
+                    name: form.name,
                     mobile: form.phone,
-                    email: form.email
+                    email: form.email,
                 },
                 meta: { is_self_login: false },
                 form_data: {
                     dob: form.dob,
                     location: form.location,
                     loanAmount: form.loanAmount,
-                    employmentType: form.employmentType,
+                    deduction: form.deduction,
+                    companyName: form.companyName,
+                    companyAddress: form.companyAddress,
+                    businessStartDate: form.businessStartDate,
+                    loanType: form.loanType,
                     hasOtherLoan: form.hasOtherLoan,
-                    otherLoanAmount: form.otherLoanAmount,
-                    otherIncome: form.otherIncome || "N/A",
-                    otherIncomeAmount: form.otherIncomeAmount || "0"
+                    otherLoanAmount: form.otherLoanAmount || "0"
                 }
             };
 
@@ -168,6 +167,7 @@ export default function NRPLoanFormScreen() {
             if (!id) throw new Error("Lead ID missing");
             setLeadId(id);
             setStep(2);
+
         } catch (err) {
             console.error(err);
             Alert.alert("Error", "Failed to create application");
@@ -258,31 +258,29 @@ export default function NRPLoanFormScreen() {
     const renderStep1 = () => (
         <View style={styles.formContainer}>
             <View style={styles.card}>
+                <Text style={styles.cardHeader}>Business Details</Text>
+                <CustomPicker label="Type of Business" required value={form.loanType} options={BIZ_TYPES} onSelect={v => handleInputChange("loanType", v)} error={errors.loanType} />
+                <DatePickerInput label="Business Start Date" required value={form.businessStartDate} onChange={v => handleInputChange("businessStartDate", v)} maximumDate={new Date()} error={errors.businessStartDate} />
+                <InputGroup label="Company Name" required value={form.companyName} onChange={v => handleInputChange("companyName", v)} error={errors.companyName} placeholder="Enter company name" />
+                <InputGroup label="Company Address" required value={form.companyAddress} onChange={v => handleInputChange("companyAddress", v)} error={errors.companyAddress} placeholder="Enter full address" />
+                <InputGroup label="Deduction Details" required value={form.deduction} onChange={v => handleInputChange("deduction", v)} error={errors.deduction} placeholder="Salary deduction details" />
+            </View>
+
+            <View style={styles.card}>
                 <Text style={styles.cardHeader}>Personal Information</Text>
-                <InputGroup label="Client Name" required value={form.clientName} onChange={v => handleInputChange("clientName", v)} error={errors.clientName} placeholder="Enter full name" />
+                <InputGroup label="Client Name" required value={form.name} onChange={v => handleInputChange("name", v)} error={errors.name} placeholder="Enter full name" />
                 <InputGroup label="Phone Number" required keyboardType="numeric" maxLength={10} value={form.phone} onChange={v => handleInputChange("phone", v)} error={errors.phone} placeholder="10-digit number" />
                 <InputGroup label="Email ID" required keyboardType="email-address" value={form.email} onChange={v => handleInputChange("email", v)} error={errors.email} placeholder="Enter email address" />
                 <DatePickerInput label="Date of Birth" required value={form.dob} onChange={v => handleInputChange("dob", v)} maximumDate={new Date()} error={errors.dob} />
                 <InputGroup label="Location" required value={form.location} onChange={v => handleInputChange("location", v)} error={errors.location} placeholder="Enter city" />
-                <InputGroup label="Loan Amount" required keyboardType="numeric" value={form.loanAmount} onChange={v => handleInputChange("loanAmount", v)} error={errors.loanAmount} placeholder="Enter Amount (₹)" />
+                <InputGroup label="Loan Amount" required keyboardType="numeric" value={form.loanAmount} onChange={v => handleInputChange("loanAmount", v)} error={errors.loanAmount} placeholder="Enter amount" />
             </View>
 
             <View style={styles.card}>
-                <Text style={styles.cardHeader}>Employment & Liabilities</Text>
-                <CustomPicker label="Employment Type" required value={form.employmentType} options={["Salaried Person", "Self Employed", "Other"]} onSelect={v => handleInputChange("employmentType", v)} error={errors.employmentType} />
-
-                {form.employmentType === "Other" && (
-                    <>
-                        <CustomPicker label="Other Income Source" required value={form.otherIncome} options={["Rental"]} onSelect={v => handleInputChange("otherIncome", v)} error={errors.otherIncome} />
-                        <InputGroup label="Approx Amount" required keyboardType="numeric" value={form.otherIncomeAmount} onChange={v => handleInputChange("otherIncomeAmount", v)} error={errors.otherIncomeAmount} placeholder="Enter amount" />
-                    </>
-                )}
-
-                <View style={styles.divider} />
+                <Text style={styles.cardHeader}>Other Obligations</Text>
                 <CustomPicker label="Any Other Loan Obligations?" required value={form.hasOtherLoan} options={["Yes", "No"]} onSelect={v => handleInputChange("hasOtherLoan", v)} error={errors.hasOtherLoan} />
-
                 {form.hasOtherLoan === "Yes" && (
-                    <InputGroup label="Existing Loan Amount" required keyboardType="numeric" value={form.otherLoanAmount} onChange={v => handleInputChange("otherLoanAmount", v)} error={errors.otherLoanAmount} placeholder="Amount" />
+                    <InputGroup label="Existing Loan Amount" required keyboardType="numeric" value={form.otherLoanAmount} onChange={v => handleInputChange("otherLoanAmount", v)} error={errors.otherLoanAmount} placeholder="Enter amount" />
                 )}
             </View>
         </View>
@@ -357,7 +355,7 @@ export default function NRPLoanFormScreen() {
                     <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
                 </TouchableOpacity>
                 <View>
-                    <Text style={styles.headerTitle}>NRP Loan Application</Text>
+                    <Text style={styles.headerTitle}>Business Loan Application</Text>
                     <Text style={styles.stepIndicator}>Step {step} of 2</Text>
                 </View>
             </View>
@@ -421,7 +419,6 @@ const styles = StyleSheet.create({
     },
     cardHeader: { fontSize: 16, fontWeight: '700', color: '#0F172A', marginBottom: 16 },
     cardSubHeader: { fontSize: 12, color: '#64748B', marginBottom: 16, marginTop: -12 },
-    divider: { height: 1, backgroundColor: '#F1F5F9', marginVertical: 16 },
     inputGroup: { marginBottom: 16 },
     label: { fontSize: 13, fontWeight: '600', marginBottom: 6, color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.5 },
     required: { color: theme.colors.error },

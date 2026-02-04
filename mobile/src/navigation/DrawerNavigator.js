@@ -25,15 +25,31 @@ import LeadManagementScreen from '../screens/dashboard/referral/LeadManagementSc
 import AddDetailedLeadScreen from '../screens/dashboard/detailed/AddDetailedLeadScreen';
 import DashboardScreen from '../screens/dashboard/DashboardScreen';
 import ClientPortfolioScreen from '../screens/dashboard/clientPortfolio/ClientPortfolioScreen';
-import HomeLoanFormScreen from '../screens/dashboard/detailed/forms/HomeLoanFormScreen';
-import PersonalLoanFormScreen from '../screens/dashboard/detailed/forms/PersonalLoanFormScreen';
-import BusinessLoanFormScreen from '../screens/dashboard/detailed/forms/BusinessLoanFormScreen';
-import EducationLoanFormScreen from '../screens/dashboard/detailed/forms/EducationLoanFormScreen';
-import MortgageLoanFormScreen from '../screens/dashboard/detailed/forms/MortgageLoanFormScreen';
-import SMELoanFormScreen from '../screens/dashboard/detailed/forms/SMELoanFormScreen';
-import NRPLoanFormScreen from '../screens/dashboard/detailed/forms/NRPLoanFormScreen';
-import VehicleLoanFormScreen from '../screens/dashboard/detailed/forms/VehicleLoanFormScreen';
-import LoanAgainstSecuritiesFormScreen from '../screens/dashboard/detailed/forms/LoanAgainstSecuritiesFormScreen';
+import HomeLoanFormScreen from '../screens/dashboard/detailed/forms/loans/HomeLoanFormScreen';
+import PersonalLoanFormScreen from '../screens/dashboard/detailed/forms/loans/PersonalLoanFormScreen';
+import BusinessLoanFormScreen from '../screens/dashboard/detailed/forms/loans/BusinessLoanFormScreen';
+import EducationLoanFormScreen from '../screens/dashboard/detailed/forms/loans/EducationLoanFormScreen';
+import MortgageLoanFormScreen from '../screens/dashboard/detailed/forms/loans/MortgageLoanFormScreen';
+import SMELoanFormScreen from '../screens/dashboard/detailed/forms/loans/SMELoanFormScreen';
+import NRPLoanFormScreen from '../screens/dashboard/detailed/forms/loans/NRPLoanFormScreen';
+import VehicleLoanFormScreen from '../screens/dashboard/detailed/forms/loans/VehicleLoanFormScreen';
+import LoanAgainstSecuritiesFormScreen from '../screens/dashboard/detailed/forms/loans/LoanAgainstSecuritiesFormScreen';
+import AppHeader from '../components/common/AppHeader.js';
+
+
+// // loan screen imports
+// // import HomeLoanFormScreen from '../screens/dashboard/detailed/forms/HomeLoanFormScreen';
+// // import PersonalLoanFormScreen from '../screens/dashboard/detailed/forms/PersonalLoanFormScreen';
+// import BusinessLoanFormScreen from '../screens/dashboard/detailed/forms/loans/BusinessLoanFormScreen';
+// import EducationLoanFormScreen from '../screens/dashboard/detailed/forms/loans/EducationLoanFormScreen';
+// import MortgageLoanFormScreen from '../screens/dashboard/detailed/forms/loans/MortgageLoanFormScreen';
+// import SMELoanFormScreen from '../screens/dashboard/detailed/forms/loans/SMELoanFormScreen';
+// import NRPLoanFormScreen from '../screens/dashboard/detailed/forms/loans/NRPLoanFormScreen';
+// import VehicleLoanFormScreen from '../screens/dashboard/detailed/forms/loans/VehicleLoanFormScreen';
+// import LoanAgainstSecuritiesFormScreen from '../screens/dashboard/detailed/forms/loans/LoanAgainstSecuritiesFormScreen';
+// import HomeLoanFormScreen from '../screens/dashboard/detailed/forms/loans/HomeLoanFormScreen';
+// import PersonalLoanFormScreen from '../screens/dashboard/detailed/forms/loans/PersonalLoanFormScreen';
+// // import LoanAgainstSecuritiesFormScreen from '../screens/dashboard/detailed/forms/LoanAgainstSecuritiesFormScreen';
 
 const Drawer = createDrawerNavigator();
 
@@ -57,14 +73,14 @@ const DrawerNavigator = () => {
                     width: '80%',
                     backgroundColor: theme.colors.background,
                 },
+                
             }}
         >
             <Drawer.Screen
                 name="MainTabs"
                 component={AppTabs}
                 options={{
-                    title: 'Home',
-                    headerTitle: 'Infinity Arhvisva'
+                     header: () => <AppHeader />,
                 }}
             />
 

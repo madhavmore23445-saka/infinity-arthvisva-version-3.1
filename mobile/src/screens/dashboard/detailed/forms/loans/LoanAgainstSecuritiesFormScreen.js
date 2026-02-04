@@ -10,30 +10,36 @@ import {
     SafeAreaView,
     ActivityIndicator,
     Modal,
-    Platform
+    Platform 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
-import { DashboardService } from '../../../../services/dashboardService';
-import theme from '../../../../constants/theme';
+// import { DashboardService } from '../../../../services/dashboardService';
+// import theme from '../../../../constants/theme';
 import { useNavigation } from '@react-navigation/native';
-import DatePickerInput from '../../../../components/common/DatePickerInput';
+// import DatePickerInput from '../../../../../components/common/DatePickerInput';
+// import { DashboardService } from '../../../../../services/dashboardService';
+// import theme from '../../../../../constants/theme';
+// import DatePickerInput from '../../../../components/common/DatePickerInput';
+
+import theme from '../../../../../constants/theme';
+import { DashboardService } from '../../../../../services/dashboardService';
+import DatePickerInput from '../../../../../components/common/DatePickerInput';
 
 const MAX_FILE_SIZE_BYTES = 200 * 1024; // 200KB
 
 const DOC_REGISTRY = {
     "Aadhar Card": { key: "AADHAAR", label: "Aadhar Card", multiple: false },
     "PAN Card": { key: "PAN", label: "PAN Card", multiple: false },
-    "Udyam Aadhar Registration": { key: "UDYAM", label: "Udyam Aadhar Registration", multiple: false },
-    "Shop Act Licence": { key: "SHOP_ACT", label: "Shop Act Licence", multiple: false },
-    "1 Year Banking Statement": { key: "BANK_STATEMENT_1YR", label: "1 Year Banking Statement", multiple: true },
     "Address Proof": { key: "ADDRESS_PROOF", label: "Address Proof", multiple: false },
+    "1 Year Banking Statement": { key: "BANK_STATEMENT_1YR", label: "1 Year Banking Statement", multiple: true },
+    "Demat Account Statement": { key: "DEMAT_STMT", label: "Demat Account Statement", multiple: true },
+    "Portfolio Reports": { key: "PORTFOLIO", label: "Portfolio Reports", multiple: true },
     "ITR 3 Years": { key: "ITR_3YRS", label: "ITR 3 Years", multiple: true },
+    "Cancel Cheque": { key: "CANCEL_CHEQUE", label: "Cancel Cheque", multiple: false },
     "Photograph": { key: "PHOTO", label: "Photograph", multiple: false },
     "Existing Loan Statement": { key: "EXISTING_LOAN", label: "Existing Loan Statement", multiple: true },
 };
-
-const BIZ_TYPES = ["Proprietorship", "Partnership", "Pvt. Ltd."];
 
 const CustomPicker = ({ label, value, options, onSelect, error, required }) => {
     const [modalVisible, setModalVisible] = useState(false);
@@ -78,14 +84,13 @@ const CustomPicker = ({ label, value, options, onSelect, error, required }) => {
     );
 };
 
-export default function BusinessLoanFormScreen() {
+export default function LoanAgainstSecuritiesFormScreen() {
     const navigation = useNavigation();
     const [step, setStep] = useState(1);
     const [leadId, setLeadId] = useState(null);
     const [form, setForm] = useState({
-        name: "", phone: "", email: "", dob: "", location: "", loanAmount: "",
-        deduction: "", companyName: "", companyAddress: "", businessStartDate: "",
-        loanType: "", hasOtherLoan: "", otherLoanAmount: ""
+        clientName: "", phone: "", email: "", dob: "", location: "",
+        loanAmount: "", hasOtherLoan: "", otherLoanAmount: ""
     });
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -93,7 +98,7 @@ export default function BusinessLoanFormScreen() {
     const [statusMsg, setStatusMsg] = useState("");
 
     const requiredDocsList = useMemo(() => {
-        const base = ["Aadhar Card", "PAN Card", "Udyam Aadhar Registration", "Shop Act Licence", "1 Year Banking Statement", "Address Proof", "ITR 3 Years", "Photograph"];
+        const base = ["Aadhar Card", "PAN Card", "Address Proof", "1 Year Banking Statement", "Demat Account Statement", "Portfolio Reports", "ITR 3 Years", "Cancel Cheque", "Photograph"];
         if (form.hasOtherLoan === "Yes") base.push("Existing Loan Statement");
         return base.map(label => DOC_REGISTRY[label]).filter(Boolean);
     }, [form.hasOtherLoan]);
@@ -110,15 +115,10 @@ export default function BusinessLoanFormScreen() {
         const errs = {};
         const req = (f, msg) => { if (!form[f]?.trim()) errs[f] = msg; };
 
-        req("loanType", "Select business type");
-        req("businessStartDate", "Start date is required");
-        req("name", "Client Name is required");
+        req("clientName", "Client Name is required");
         req("location", "Location is required");
         req("dob", "Date of Birth is required");
         req("loanAmount", "Loan Amount is required");
-        req("companyName", "Company Name is required");
-        req("deduction", "Deduction details are required");
-        req("companyAddress", "Company Address is required");
 
         if (!form.phone || form.phone.length !== 10) errs.phone = "Phone number must be exactly 10 digits";
         if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Invalid email format";
@@ -136,10 +136,10 @@ export default function BusinessLoanFormScreen() {
         try {
             const payload = {
                 department: "Loan",
-                product_type: "Business Loan",
-                sub_category: "Business Loan",
+                product_type: "Loan Against Securities",
+                sub_category: "Loan Against Securities",
                 client: {
-                    name: form.name,
+                    name: form.clientName,
                     mobile: form.phone,
                     email: form.email,
                 },
@@ -148,11 +148,6 @@ export default function BusinessLoanFormScreen() {
                     dob: form.dob,
                     location: form.location,
                     loanAmount: form.loanAmount,
-                    deduction: form.deduction,
-                    companyName: form.companyName,
-                    companyAddress: form.companyAddress,
-                    businessStartDate: form.businessStartDate,
-                    loanType: form.loanType,
                     hasOtherLoan: form.hasOtherLoan,
                     otherLoanAmount: form.otherLoanAmount || "0"
                 }
@@ -254,17 +249,8 @@ export default function BusinessLoanFormScreen() {
     const renderStep1 = () => (
         <View style={styles.formContainer}>
             <View style={styles.card}>
-                <Text style={styles.cardHeader}>Business Details</Text>
-                <CustomPicker label="Type of Business" required value={form.loanType} options={BIZ_TYPES} onSelect={v => handleInputChange("loanType", v)} error={errors.loanType} />
-                <DatePickerInput label="Business Start Date" required value={form.businessStartDate} onChange={v => handleInputChange("businessStartDate", v)} maximumDate={new Date()} error={errors.businessStartDate} />
-                <InputGroup label="Company Name" required value={form.companyName} onChange={v => handleInputChange("companyName", v)} error={errors.companyName} placeholder="Enter company name" />
-                <InputGroup label="Company Address" required value={form.companyAddress} onChange={v => handleInputChange("companyAddress", v)} error={errors.companyAddress} placeholder="Enter full address" />
-                <InputGroup label="Deduction Details" required value={form.deduction} onChange={v => handleInputChange("deduction", v)} error={errors.deduction} placeholder="Salary deduction details" />
-            </View>
-
-            <View style={styles.card}>
-                <Text style={styles.cardHeader}>Personal Information</Text>
-                <InputGroup label="Client Name" required value={form.name} onChange={v => handleInputChange("name", v)} error={errors.name} placeholder="Enter full name" />
+                <Text style={styles.cardHeader}>Personal & Application Details</Text>
+                <InputGroup label="Client Name" required value={form.clientName} onChange={v => handleInputChange("clientName", v)} error={errors.clientName} placeholder="Enter full name" />
                 <InputGroup label="Phone Number" required keyboardType="numeric" maxLength={10} value={form.phone} onChange={v => handleInputChange("phone", v)} error={errors.phone} placeholder="10-digit number" />
                 <InputGroup label="Email ID" required keyboardType="email-address" value={form.email} onChange={v => handleInputChange("email", v)} error={errors.email} placeholder="Enter email address" />
                 <DatePickerInput label="Date of Birth" required value={form.dob} onChange={v => handleInputChange("dob", v)} maximumDate={new Date()} error={errors.dob} />
@@ -351,7 +337,7 @@ export default function BusinessLoanFormScreen() {
                     <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
                 </TouchableOpacity>
                 <View>
-                    <Text style={styles.headerTitle}>Business Loan Application</Text>
+                    <Text style={styles.headerTitle}>Loan Against Securities</Text>
                     <Text style={styles.stepIndicator}>Step {step} of 2</Text>
                 </View>
             </View>

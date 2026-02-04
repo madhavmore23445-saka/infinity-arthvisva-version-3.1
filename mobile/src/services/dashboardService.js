@@ -13,7 +13,7 @@ export const DashboardService = {
         return response.data;
     },
 
-    // 🔹 Get Leads
+    // 🔹 Get Leads  
     getLeads: async () => {
         const response = await api.get("/api/dashboard/get-leads");
         return response.data;

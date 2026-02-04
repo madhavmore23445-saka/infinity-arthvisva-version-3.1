@@ -2,9 +2,9 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Define the base URL - prioritizing the production URL as main
-const API_URL = 'https://api.infinityarthvishva.com';
+// const API_URL = 'https://api.infinityarthvishva.com';
 
-// const API_URL = 'http://192.168.1.58:5000';
+const API_URL = 'http://192.168.1.83:5000';
 
 const api = axios.create({
     baseURL: API_URL,

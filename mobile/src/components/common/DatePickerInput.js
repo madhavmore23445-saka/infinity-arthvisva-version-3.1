@@ -9,7 +9,7 @@ export default function DatePickerInput({ label, value, onChange, error, require
 
     // Parse value string (YYYY-MM-DD) to Date object, or use current date
     const dateValue = value ? new Date(value) : new Date();
-
+ 
     const handleChange = (event, selectedDate) => {
         if (Platform.OS === 'android') {
             setShow(false);

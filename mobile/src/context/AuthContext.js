@@ -99,13 +99,15 @@ export const AuthProvider = ({ children }) => {
     };
 
     // PHASE 1: INITIAL REGISTRATION
-    const signup = async (name, email, mobile, password, rm_referral, confirmpass) => {
+    const signup = async (name, email, mobile, password, rm_referral,state , city, confirmpass) => {
         try {
             const data = await AuthService.register({
                 name,
                 email,
                 mobile,
                 password,
+                state,
+                city,
                 confirm_password: confirmpass,
                 rm_referral: rm_referral || ""
             });
