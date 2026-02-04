@@ -62,3 +62,18 @@ keep existing functinlity as it is working
 
 make the ui best with following the best coding practicess
 
+after that
+
+
+HomeScreen.js
+AppHeader.js
+
+DrawerNavigator.js
+
+update the ui for the home screen , make it look good , 
+
+and also maek the drawer navigatior robust and best in class by following the best coding practices and make sure it is best and look good 
+
+
+
+ClientPortfolioScreen.js
