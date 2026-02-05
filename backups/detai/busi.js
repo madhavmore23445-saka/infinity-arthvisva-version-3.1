@@ -10,7 +10,7 @@ import {
     SafeAreaView,
     ActivityIndicator,
     Modal,
-    Platform  
+    Platform 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
@@ -23,22 +23,21 @@ import theme from '../../../../../constants/theme';
 import { DashboardService } from '../../../../../services/dashboardService';
 import DatePickerInput from '../../../../../components/common/DatePickerInput';
 
-
 const MAX_FILE_SIZE_BYTES = 200 * 1024; // 200KB
 
 const DOC_REGISTRY = {
     "Aadhar Card": { key: "AADHAAR", label: "Aadhar Card", multiple: false },
     "PAN Card": { key: "PAN", label: "PAN Card", multiple: false },
-    "Address Proof (Rent Agmt/Light Bill)": { key: "ADDRESS_PROOF", label: "Address Proof", multiple: true },
-    "GST Registration Certificate": { key: "GST_CERT", label: "GST Registration Certificate", multiple: false },
-    "Udyam Aadhar": { key: "UDYAM", label: "Udyam Aadhar", multiple: false },
+    "Udyam Aadhar Registration": { key: "UDYAM", label: "Udyam Aadhar Registration", multiple: false },
     "Shop Act Licence": { key: "SHOP_ACT", label: "Shop Act Licence", multiple: false },
     "1 Year Banking Statement": { key: "BANK_STATEMENT_1YR", label: "1 Year Banking Statement", multiple: true },
+    "Address Proof": { key: "ADDRESS_PROOF", label: "Address Proof", multiple: false },
     "ITR 3 Years": { key: "ITR_3YRS", label: "ITR 3 Years", multiple: true },
-    "Constitution Doc (Partnership/MOA)": { key: "CONSTITUTION_DOC", label: "Constitution Doc", multiple: false },
     "Photograph": { key: "PHOTO", label: "Photograph", multiple: false },
     "Existing Loan Statement": { key: "EXISTING_LOAN", label: "Existing Loan Statement", multiple: true },
 };
+
+const BIZ_TYPES = ["Proprietorship", "Partnership", "Pvt. Ltd."];
 
 const CustomPicker = ({ label, value, options, onSelect, error, required }) => {
     const [modalVisible, setModalVisible] = useState(false);
@@ -83,13 +82,14 @@ const CustomPicker = ({ label, value, options, onSelect, error, required }) => {
     );
 };
 
-export default function SMELoanFormScreen() {
+export default function BusinessLoanFormScreen() {
     const navigation = useNavigation();
     const [step, setStep] = useState(1);
     const [leadId, setLeadId] = useState(null);
     const [form, setForm] = useState({
-        clientName: "", phone: "", email: "", dob: "", location: "",
-        loanAmount: "", hasOtherLoan: "", otherLoanAmount: ""
+        name: "", phone: "", email: "", dob: "", location: "", loanAmount: "",
+        deduction: "", companyName: "", companyAddress: "", businessStartDate: "",
+        loanType: "", hasOtherLoan: "", otherLoanAmount: ""
     });
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -97,7 +97,7 @@ export default function SMELoanFormScreen() {
     const [statusMsg, setStatusMsg] = useState("");
 
     const requiredDocsList = useMemo(() => {
-        const base = ["Aadhar Card", "PAN Card", "Address Proof (Rent Agmt/Light Bill)", "GST Registration Certificate", "Udyam Aadhar", "Shop Act Licence", "1 Year Banking Statement", "ITR 3 Years", "Constitution Doc (Partnership/MOA)", "Photograph"];
+        const base = ["Aadhar Card", "PAN Card", "Udyam Aadhar Registration", "Shop Act Licence", "1 Year Banking Statement", "Address Proof", "ITR 3 Years", "Photograph"];
         if (form.hasOtherLoan === "Yes") base.push("Existing Loan Statement");
         return base.map(label => DOC_REGISTRY[label]).filter(Boolean);
     }, [form.hasOtherLoan]);
@@ -114,10 +114,15 @@ export default function SMELoanFormScreen() {
         const errs = {};
         const req = (f, msg) => { if (!form[f]?.trim()) errs[f] = msg; };
 
-        req("clientName", "Client Name is required");
+        req("loanType", "Select business type");
+        req("businessStartDate", "Start date is required");
+        req("name", "Client Name is required");
         req("location", "Location is required");
         req("dob", "Date of Birth is required");
         req("loanAmount", "Loan Amount is required");
+        req("companyName", "Company Name is required");
+        req("deduction", "Deduction details are required");
+        req("companyAddress", "Company Address is required");
 
         if (!form.phone || form.phone.length !== 10) errs.phone = "Phone number must be exactly 10 digits";
         if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Invalid email format";
@@ -135,10 +140,10 @@ export default function SMELoanFormScreen() {
         try {
             const payload = {
                 department: "Loan",
-                product_type: "SME Loan",
-                sub_category: "SME Loan",
+                product_type: "Business Loan",
+                sub_category: "Business Loan",
                 client: {
-                    name: form.clientName,
+                    name: form.name,
                     mobile: form.phone,
                     email: form.email,
                 },
@@ -147,6 +152,11 @@ export default function SMELoanFormScreen() {
                     dob: form.dob,
                     location: form.location,
                     loanAmount: form.loanAmount,
+                    deduction: form.deduction,
+                    companyName: form.companyName,
+                    companyAddress: form.companyAddress,
+                    businessStartDate: form.businessStartDate,
+                    loanType: form.loanType,
                     hasOtherLoan: form.hasOtherLoan,
                     otherLoanAmount: form.otherLoanAmount || "0"
                 }
@@ -248,8 +258,17 @@ export default function SMELoanFormScreen() {
     const renderStep1 = () => (
         <View style={styles.formContainer}>
             <View style={styles.card}>
+                <Text style={styles.cardHeader}>Business Details</Text>
+                <CustomPicker label="Type of Business" required value={form.loanType} options={BIZ_TYPES} onSelect={v => handleInputChange("loanType", v)} error={errors.loanType} />
+                <DatePickerInput label="Business Start Date" required value={form.businessStartDate} onChange={v => handleInputChange("businessStartDate", v)} maximumDate={new Date()} error={errors.businessStartDate} />
+                <InputGroup label="Company Name" required value={form.companyName} onChange={v => handleInputChange("companyName", v)} error={errors.companyName} placeholder="Enter company name" />
+                <InputGroup label="Company Address" required value={form.companyAddress} onChange={v => handleInputChange("companyAddress", v)} error={errors.companyAddress} placeholder="Enter full address" />
+                <InputGroup label="Deduction Details" required value={form.deduction} onChange={v => handleInputChange("deduction", v)} error={errors.deduction} placeholder="Salary deduction details" />
+            </View>
+
+            <View style={styles.card}>
                 <Text style={styles.cardHeader}>Personal Information</Text>
-                <InputGroup label="Client Name" required value={form.clientName} onChange={v => handleInputChange("clientName", v)} error={errors.clientName} placeholder="Enter full name" />
+                <InputGroup label="Client Name" required value={form.name} onChange={v => handleInputChange("name", v)} error={errors.name} placeholder="Enter full name" />
                 <InputGroup label="Phone Number" required keyboardType="numeric" maxLength={10} value={form.phone} onChange={v => handleInputChange("phone", v)} error={errors.phone} placeholder="10-digit number" />
                 <InputGroup label="Email ID" required keyboardType="email-address" value={form.email} onChange={v => handleInputChange("email", v)} error={errors.email} placeholder="Enter email address" />
                 <DatePickerInput label="Date of Birth" required value={form.dob} onChange={v => handleInputChange("dob", v)} maximumDate={new Date()} error={errors.dob} />
@@ -336,7 +355,7 @@ export default function SMELoanFormScreen() {
                     <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
                 </TouchableOpacity>
                 <View>
-                    <Text style={styles.headerTitle}>SME Loan Application</Text>
+                    <Text style={styles.headerTitle}>Business Loan Application</Text>
                     <Text style={styles.stepIndicator}>Step {step} of 2</Text>
                 </View>
             </View>

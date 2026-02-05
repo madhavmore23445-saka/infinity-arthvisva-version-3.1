@@ -32,10 +32,10 @@ export default function AddDetailedLeadScreen() {
         const routes = {
             "Home Loans": "HomeLoanForm",
             "Personal Loans": "PersonalLoanForm",
-            // "Business Loan": "BusinessLoanForm",
+            "Business Loan": "BusinessLoanForm",
             // "Education Loan": "EducationLoanForm",
             // "Mortgage Loans": "MortgageLoanForm",
-            // "SME": "SMELoanForm",
+            "SME": "SMELoanForm",
             // "NRP Loan": "NRPLoanForm",
             // "Vehicle Loan": "VehicleLoanForm",
             "Loan Against Securities / MF": "LoanAgainstSecuritiesForm"

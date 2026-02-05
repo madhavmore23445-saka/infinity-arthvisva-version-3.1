@@ -623,7 +623,7 @@ const styles = StyleSheet.create({
 
 addBtnText: {
     color: '#FFFFFF',
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: '600',
     marginRight: 6,              // space before +
 },

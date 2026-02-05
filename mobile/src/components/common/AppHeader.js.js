@@ -52,8 +52,8 @@ export default AppHeader;
 
 const styles = StyleSheet.create({
   container: {
-    marginTop:25,
-    height: 56,
+    marginTop:2,
+    height: 64,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.background,
@@ -61,6 +61,7 @@ const styles = StyleSheet.create({
   left: {
     width: 50,
     marginLeft:17,
+    marginTop:30,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -69,12 +70,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    height: 30,
+    height: 35,
+    marginTop:30,
     width: 120,
   },
   right: {
     width: 50,
     marginRight:17,
+    marginTop:30,
     alignItems: 'center',
     justifyContent: 'center',
   },

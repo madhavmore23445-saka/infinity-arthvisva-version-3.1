@@ -10,7 +10,7 @@ import {
     SafeAreaView,
     ActivityIndicator,
     Modal,
-    Platform  
+    Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
@@ -24,26 +24,12 @@ import { DashboardService } from '../../../../../services/dashboardService';
 import DatePickerInput from '../../../../../components/common/DatePickerInput';
 
 
-const MAX_FILE_SIZE_BYTES = 200 * 1024; // 200KB
 
-const DOC_REGISTRY = {
-    "Aadhar Card": { key: "AADHAAR", label: "Aadhar Card", multiple: false },
-    "PAN Card": { key: "PAN", label: "PAN Card", multiple: false },
-    "Address Proof (Rent Agmt/Light Bill)": { key: "ADDRESS_PROOF", label: "Address Proof", multiple: true },
-    "GST Registration Certificate": { key: "GST_CERT", label: "GST Registration Certificate", multiple: false },
-    "Udyam Aadhar": { key: "UDYAM", label: "Udyam Aadhar", multiple: false },
-    "Shop Act Licence": { key: "SHOP_ACT", label: "Shop Act Licence", multiple: false },
-    "1 Year Banking Statement": { key: "BANK_STATEMENT_1YR", label: "1 Year Banking Statement", multiple: true },
-    "ITR 3 Years": { key: "ITR_3YRS", label: "ITR 3 Years", multiple: true },
-    "Constitution Doc (Partnership/MOA)": { key: "CONSTITUTION_DOC", label: "Constitution Doc", multiple: false },
-    "Photograph": { key: "PHOTO", label: "Photograph", multiple: false },
-    "Existing Loan Statement": { key: "EXISTING_LOAN", label: "Existing Loan Statement", multiple: true },
-};
-
-const CustomPicker = ({ label, value, options, onSelect, error, required }) => {
+// sme loan form screen
+const CustomPickerr = ({ label, value, options, onSelect, error, required }) => {
     const [modalVisible, setModalVisible] = useState(false);
     return (
-        <View style={styles.inputGroup}>
+        <View style={styles.inputGroup} >
             <Text style={styles.label}>{label} {required && <Text style={styles.required}>*</Text>}</Text>
             <TouchableOpacity
                 style={[styles.input, styles.pickerInput, error && styles.inputError]}
@@ -76,20 +62,29 @@ const CustomPicker = ({ label, value, options, onSelect, error, required }) => {
                                 </TouchableOpacity>
                             ))}
                         </ScrollView>
-                    </View>
-                </View>
-            </Modal>
-        </View>
-    );
-};
 
-export default function SMELoanFormScreen() {
+                    </View>
+
+                </View>
+
+
+            </Modal>
+
+
+
+
+
+        </View>
+    )
+}
+
+
+export default function SMELoanForm() {
     const navigation = useNavigation();
     const [step, setStep] = useState(1);
     const [leadId, setLeadId] = useState(null);
     const [form, setForm] = useState({
-        clientName: "", phone: "", email: "", dob: "", location: "",
-        loanAmount: "", hasOtherLoan: "", otherLoanAmount: ""
+        clientName: "", phone: "", email: "", dob: "", location: "", loanAmount: "", hasOtherLoan: "", otherLoanAmount: ""
     });
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -266,6 +261,34 @@ export default function SMELoanFormScreen() {
             </View>
         </View>
     );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+const MAX_FILE_SIZE_BYTES = 200 * 1024; // 200KB
+
+export default function SMELoanFormScreen() {
+
 
     const renderStep2 = () => (
         <View style={styles.step2Container}>

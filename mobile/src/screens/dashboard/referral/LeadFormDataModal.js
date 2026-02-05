@@ -44,7 +44,7 @@ export default function LeadFormDataModal({ visible, onClose, lead }) {
     const keys = Object.keys(formData).filter(k => formData[k] && KEY_LABELS[k]);
 
     return (
-        <Modal visible={visible} animationType="slide" transparent>
+        <Modal visible={visible} animationType="none" transparent>
             <View style={styles.overlay}>
                 <View style={styles.modalContent}>
                     <View style={styles.header}>

@@ -158,7 +158,7 @@ export default function LeadDocumentsModal({ visible, onClose, lead }) {
     };
 
     return (
-        <Modal visible={visible} animationType="slide" transparent>
+        <Modal visible={visible} animationType="none" transparent>
             <View style={styles.overlay}>
                 <TouchableOpacity style={styles.overlayTouch} onPress={onClose} activeOpacity={1}>
                     <View style={[styles.modalContent, { height: '80%' }]} onStartShouldSetResponder={() => true}>
